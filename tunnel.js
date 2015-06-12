@@ -1,5 +1,7 @@
 var drone;
 var cnt = 0
+var LEFT_FACING = [1,2,3,4]
+var RIGHT_FACING = [3,4,1,2]
 
 startBuild = function(){
   cnt = 0;
@@ -7,19 +9,35 @@ startBuild = function(){
   _buildTunnel()
 }
 
+function pointRight(dir){
+  if(dir == 0)
+    newDir = 3
+  else
+    newDir = dir - 1
+  return(Drone.PLAYER_TORCH_FACING[newDir])
+}
+
+function pointLeft(dir){
+  if(dir == 3)
+    newDir = 0
+  else
+    newDir = dir + 1
+  return(Drone.PLAYER_TORCH_FACING[newDir])
+}
+
 _buildTunnel = function(){
   for(i = 1; i < 2; i++){
     myStone = blocks.brick.stone
     drone.chkpt('check')
 
+    firstTorch = pointRight(drone.dir)
+    secondTorch = pointLeft(drone.dir)
+
     //wall
     drone.box(myStone,1,5,3)
 
     //add torch
-    drone.up(3).right(1).fwd(1).box(blocks.torch + ':0x4')
-    //drone.up(1).box(blocks.torch + ':0x2')
-    //drone.up(1).box(blocks.torch + ':0x3')
-    //drone.up(1).box(blocks.torch + ':0x4')
+    drone.up(3).right(1).fwd(1).box(blocks.torch + ':' + firstTorch)
     drone.move('check')
 
     //ceiling
@@ -32,14 +50,12 @@ _buildTunnel = function(){
     drone.box(myStone,1,5,3)
 
     //add torch
-    echo(drone.dir)
-    //drone.up(3).back(1).box(blocks.torch + ':' + Drone.PLAYER_TORCH_FACING[drone.dir])
-    drone.up(3).left(1).fwd(1).box(blocks.torch + ':0x3')
+    drone.up(3).left(1).fwd(1).box(blocks.torch + ':' + secondTorch)
     drone.move('check')
 
     drone.fwd(4)
   }
-  if(cnt < 20){
+  if(cnt < 7){
     cnt++
     setTimeout(_buildTunnel,1000)
   }
