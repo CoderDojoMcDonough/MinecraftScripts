@@ -4,7 +4,7 @@ Sample ScriptCraft scripts used at CoderDojo McDonough
 Game of Life
 ============
 
-[life.js](life.js) implements [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life) in Minecraft using [ScriptCraft](http://scriptcraftjs.org/)
+[life.js](life.js) implements [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life) in Minecraft using [ScriptCraft](http://scriptcraftjs.org/).  Cells are generated on a 2D grid of Minecraft blocks.  The delay between generations can be adjusted by the "delay" variable.
 
 Example function call to start a Glider with 50 generations at the mouse position: 
 
