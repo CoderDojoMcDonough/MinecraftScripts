@@ -24,7 +24,7 @@ exports.life = function(genCnt){
 	makeGliderAt(playerPos);
 
 	createCells(liveCells);
-	setTimeout(_gen,delay)
+	setTimeout(gen,delay)
 }
 
 function makeGliderAt(playerPos){
@@ -40,7 +40,7 @@ function makeGliderAt(playerPos){
 	];
 }
 
-_gen = function(){
+function gen(){
 
 	var nextGenCells = [];
 	var newLife = [];
@@ -74,7 +74,7 @@ _gen = function(){
 
 	if(currentGenCnt < numberOfGenerations){
     currentGenCnt++;
-    setTimeout(_gen,delay);
+    setTimeout(gen,delay);
   }
 }
 
