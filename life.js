@@ -20,11 +20,10 @@ exports.life = function(genCnt){
 	numberOfGenerations = genCnt;
 	currentGenCnt = 0;
 
-	var playerPos = utils.getMousePos();
-	makeGliderAt(playerPos);
+	makeGliderAt(utils.getMousePos());
 
 	createCells(liveCells);
-	setTimeout(gen,delay)
+	setTimeout(gen,delay);
 }
 
 function makeGliderAt(playerPos){
