@@ -28,8 +28,8 @@ exports.life = function(genCnt){
 }
 
 function makeGliderAt(playerPos){
-	var startX = playerPos.getX() + 5;
-	var startY = playerPos.getZ() + 5;
+	var startX = playerPos.getX();
+	var startY = playerPos.getZ();
 	
 	liveCells =	[
 		{x:startX, y:startY},

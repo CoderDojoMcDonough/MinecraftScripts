@@ -6,7 +6,7 @@ Game of Life
 
 [life.js](life.js) implements [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life) in Minecraft using [ScriptCraft](http://scriptcraftjs.org/)
 
-Example function call to start a Glider with 50 generations: 
+Example function call to start a Glider with 50 generations at the mouse position: 
 
     /js life(50)
 
