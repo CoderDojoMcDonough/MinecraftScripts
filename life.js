@@ -5,6 +5,9 @@ var emptyNeighbors = [];
 
 var delay = 200;
 
+//This is a test
+
+
 var neighbors = [
 	{x:1, y:1},
 	{x:1, y:0},

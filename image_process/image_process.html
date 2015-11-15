@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    
+    <!-- This simple one-page web application can take a file local to the server, 
+         load it, preview it, then process it to generate a ScriptCraft file which
+         can be run to produce a version of that picture, made of wool, within MineCraft. -->
+        
+    <!-- JavaScript -->        
+    <script>
+        // The MineCraft wool colours
+        var paletteRGB = [[255, 255, 255], 
+                          [222, 146, 79],
+                          [177, 98, 186],
+                          [115, 152, 197],
+                          [178, 185, 60],
+                          [76, 179, 67],
+                          [213, 151, 159],
+                          [51, 51, 51],
+                          [164, 180, 170],
+                          [44, 109, 122],
+                          [116, 68, 167],
+                          [30, 50, 113],
+                          [59, 43, 14],
+                          [35, 62, 15],
+                          [132, 53, 40],
+                          [0, 0, 0]];
+      
+      // Function to take the given file URL and make it the source 
+      // for the image      
+      function assignSource()
+      {
+        var fnText = document.getElementById("fileURI");
+        var img = document.getElementById("imagePreview");
+        
+        var fileName = fnText.value;
+        img.src = fileName;
+      }
+      
+      // Function to take the image from the preview, copy it to the processing canvas, and
+      // then map it to the given palette, creating a preview out the output in the second
+      // canvas and generating the ScriptCraft function
+      function processImage() 
+      {
+        // Get the image, the processing and output canvas and the canvas
+        // context. 
+        var img = document.getElementById("imagePreview");
+        var cIn = document.getElementById("processingCanvas");
+        var cOut = document.getElementById("outputCanvas");
+        var ctxIn = cIn.getContext("2d");
+        var ctxOut = cOut.getContext("2d");
+        
+        // Clear the processing canvas and transfer in the image        
+        ctxIn.clearRect(0, 0, cIn.width, cIn.height);
+        ctxIn.drawImage(img,0,0);
+
+        // Clear the output canvas
+        ctxOut.clearRect(0, 0, cOut.width, cOut.height);
+        
+        // Retrieve the maximum width and height
+        var outputWidthBox = document.getElementById("outputWidth");
+        var outputHeightBox = document.getElementById("outputHeight");
+        var maxWidth = Number(outputWidthBox.value);
+        var maxHeight = Number(outputHeightBox.value);
+        
+        // Retrieve the function name
+        var functionNameBox = document.getElementById("functionName");
+        var functionName = functionNameBox.value;
+        
+        // Start to generate the script we're making
+        var programString = getOutputFunctionStart(functionName);
+        
+        // Loop over the pixels in the processing canvas 
+        for( var i = 0; i < img.height && i < maxHeight; i++ )
+        {
+          // Add square brackets around this sub-array
+          programString += "      [";
+          
+          for( var j = 0; j < img.width && j < maxWidth; j++ )
+          {
+            // Get the pixel in the processing canvas
+            var p = ctxIn.getImageData(j, i, 1, 1).data;
+            
+            // Get the index of the nearest colour
+            var colourIndex = nearestColourIndex(p[0], p[1], p[2])
+            
+            // Fill the pixel in the output canvas
+            ctxOut.fillStyle = "rgb(" + paletteRGB[colourIndex][0] + "," + 
+                                        paletteRGB[colourIndex][1] + "," +
+                                        paletteRGB[colourIndex][2] + ")";
+            ctxOut.fillRect(j, i, 1, 1);
+            
+            // Fill in the code array. Last entry different to rest
+            var formattedNum = (" " + colourIndex).slice(-2);
+            if (j == img.width - 1 || j == maxWidth - 1)
+              programString += formattedNum;
+            else  
+              programString += formattedNum + ", ";
+          }
+          
+          // Last formatted differently to rest
+          if (i == img.height - 1 || i == maxHeight - 1)
+            programString += "]\n";
+          else
+            programString += "],\n";
+        }
+        
+        // Tack on the remainder of the script
+        programString += getOutputFunctionEnd();
+        
+        // Set the output text to the function text
+        var preOutput = document.getElementById("programOutput");
+        preOutput.innerHTML = programString;
+      }
+
+      // A function to simply return the start of the function we're creating
+      function getOutputFunctionStart(functionName)
+      {
+        return "exports." + functionName.trim() + " = function()\n" +
+               "{\n" +
+               "  var imgArr = \n" +
+               "    [\n";
+      }
+      
+      // A function to return the remainder of the function we're creating
+      // (everything except the start and the contents of the array itself
+      function getOutputFunctionEnd()
+      {
+        return "    ];\n" +
+               "  var d = new Drone();\n" +
+               "  var i = 0;\n" +
+               "  var j = 0;\n" +
+               "  d.up(imgArr.length);\n" +
+               "  for (i = 0; i < imgArr.length; i++)\n" +
+               "  {\n" +
+               "    for (j = 0; j < imgArr[i].length; j++)\n" +
+               "    {\n" +
+               "      d.box(\"35:\" + imgArr[i][j], 1, 1, 1);\n" +
+               "      d.right();\n" +
+               "    }\n" + 
+               "    d.left(imgArr[i].length);\n" +
+               "    d.down()\n" +
+               "  }\n" +
+               "}\n";
+      }
+      
+      // Searches for the nearest colour in the paletteRGB array
+      function nearestColourIndex(r, g, b)
+      {
+        // Get the "distance" to the first palette entry
+        var distanceSquared = weightedDistanceSquared(r, g, b, paletteRGB[0][0],  paletteRGB[0][1],  paletteRGB[0][2] );
+        var nearest = 0;
+        
+        // Check each subsequent palette entry 
+        for (var i = 1; i < paletteRGB.length; i++)
+        {
+          // Get the "distance" to this palette entry
+          var thisDistSq = weightedDistanceSquared(r, g, b, paletteRGB[i][0],  paletteRGB[i][1],  paletteRGB[i][2] );
+          
+          // Is it closer than the current nearest one?
+          if (thisDistSq < distanceSquared)
+          {
+            // This is now the distance to beat. Remember the index.
+            distanceSquared = thisDistSq;
+            nearest = i;
+          }
+        }
+        
+        // Return the index of the nearest colour.
+        return nearest;
+      }
+      
+      // It's Pythagoras' theorem again, but weighted.
+      function weightedDistanceSquared(r0, b0, g0, r1, b1, g1)
+      {
+        // These weights are used to convert RGB -> YUV and are useful here
+        // to enhance the perceived closeness of two colours
+        var weightR = 0.299;
+        var weightG = 0.587;
+        var weightB = 0.114;
+        
+        // Distance between two points in space: sqrt(x^2 + y^2 + z^2)
+        return (Math.pow((r1 - r0) * weightR, 2.0) +
+                Math.pow((b1 - b0) * weightG, 2.0) +
+                Math.pow((g1 - g0) * weightB, 2.0));
+      }
+    </script>
+    
+    <!-- User Input -->
+    <p>Image to use:</p>
+    <form>
+      File Name: <input id="fileURI" Type="text"/><br/><br/>
+      Function Name: <input id="functionName" Type="text" Value="draw_image"/><br/><br/>
+      Max Output Size:  
+            <input id="outputWidth" Type="number" value="40" style="width: 40px; padding: 2px" min="1" max="100"/> x   
+            <input id="outputHeight" Type="number" value="40" style="width: 40px; padding: 2px" min="1" max="100"/>  (width, height)
+    </form>
+    <p><button onclick="assignSource()">Set image</button></p>
+
+    <!-- Preview of the image the user has selected and button to begin processing -->
+    <p>Image preview:</p>
+    <img id="imagePreview" src="placeholder.png" /><p>
+    <button onclick="processImage()">Process image</button></p>
+
+    <!-- The HTML5 canvas to do the image processing -->
+    <p>Processing canvas:</p>
+    <canvas id="processingCanvas" width="100" height="100"
+        style="border:1px solid #d3d3d3;" >
+      Your browser does not support the HTML5 canvas tag.
+    </canvas>
+
+    <!-- Nearest colours -->
+    <p>Nearest colours:</p>
+    <canvas id="outputCanvas" width="100" height="100"
+        style="border:1px solid #d3d3d3;" >
+      Your browser does not support the HTML5 canvas tag.
+    </canvas>
+    
+    <!-- Output -->
+    <p>Code output:</p>
+    <code>
+      <pre id="programOutput" style="border:1px solid #d3d3d3;">
+        Output here...
+      </pre>
+    </code>
+
+  </body>
+</html>
